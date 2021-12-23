@@ -1,0 +1,1 @@
+I hearby grant permission to use this terraform template as necessary to spin up AWS resources

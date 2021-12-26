@@ -34,33 +34,59 @@ resource "aws_vpc" "prod" {
   }
 }
 
-# Create the public and private subnets
-resource "aws_subnet" "Public_Subnet" {
+# Create the Public Subnets
+resource "aws_subnet" "Public_Subnet_az1" {
   vpc_id                  = data.aws_vpc.prod.id
   cidr_block              = "10.0.1.0/24"
   availability_zone       = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
 
   tags = {
-    Name   = "Public Subnet"
+    Name   = "Public Subnet 1"
     AZ     = "${data.aws_availability_zones.available.names[0]}"
     Region = "${data.aws_region.current.description}"
   }
 }
 
-resource "aws_subnet" "Private_Subnet" {
-  vpc_id            = data.aws_vpc.prod.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+resource "aws_subnet" "Public_Subnet_az2" {
+  vpc_id                  = data.aws_vpc.prod.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch = true
 
   tags = {
-    Name   = "Private Subnet"
+    Name   = "Public Subnet 2"
     AZ     = "${data.aws_availability_zones.available.names[1]}"
     Region = "${data.aws_region.current.description}"
   }
 }
 
-#Create the internet gateway
+# Create the Private Subnets
+resource "aws_subnet" "Private_Subnet_az1" {
+  vpc_id            = data.aws_vpc.prod.id
+  cidr_block        = "10.0.3.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name   = "Private Subnet 1"
+    AZ     = "${data.aws_availability_zones.available.names[0]}"
+    Region = "${data.aws_region.current.description}"
+  }
+}
+
+
+resource "aws_subnet" "Private_Subnet_az2" {
+  vpc_id            = data.aws_vpc.prod.id
+  cidr_block        = "10.0.4.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name   = "Private Subnet 2"
+    AZ     = "${data.aws_availability_zones.available.names[1]}"
+    Region = "${data.aws_region.current.description}"
+  }
+}
+# Create the internet gateway
 resource "aws_internet_gateway" "access_web" {
   vpc_id = data.aws_vpc.prod.id
 
@@ -81,7 +107,7 @@ resource "aws_default_route_table" "private_rt" {
 
 # Associate the private route table with the private subnet
 resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.Private_Subnet.id
+  subnet_id      = [aws_subnet.Private_Subnet_az1.id, aws_subnet.Private_Subnet_az2]
   route_table_id = aws_default_route_table.private_rt.id
 }
 
@@ -100,9 +126,9 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-# Associate the public route table with the public subnet
+# Associate the public route table with the public subnets
 resource "aws_route_table_association" "public" {
-  subnet_id      = aws_subnet.Public_Subnet.id
+  subnet_id      = [aws_subnet.Public_Subnet_az1.id, aws_subnet.Public_Subnet_az2]
   route_table_id = aws_route_table.public_rt.id
 }
 
@@ -136,6 +162,7 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
+#Create a security group for the private subnet
 resource "aws_security_group" "database_sg" {
   name        = "Database Security Group"
   description = "Security Group for the private subnet, allows internal traffic ingress"
@@ -148,7 +175,7 @@ resource "aws_security_group" "database_sg" {
       from_port   = ingress.value
       to_port     = ingress.value
       protocol    = "tcp"
-      cidr_blocks = ["10.0.1.0/24"]
+      cidr_blocks = ["10.0.1.0/24", "10.0.2.0/24"]
     }
   }
 
@@ -157,7 +184,7 @@ resource "aws_security_group" "database_sg" {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["10.0.1.0/24"]
+    cidr_blocks = ["10.0.1.0/24", "10.0.2.0/24"]
   }
 
   egress {
@@ -178,4 +205,8 @@ output "availability_zones" {
   value = data.aws_availability_zones.available.names
 }
 
-# additional_subnets branch
+# add an additional public and private subnet
+# adjust the CIDR Blocks for each subnet
+# move pub/priv subnet 1 to AZ1, move pub/priv subnet 2 to AZ2
+# update "Name" tags for each subnet
+# associate DB and Web Security groups with the new subnets

@@ -107,7 +107,7 @@ resource "aws_default_route_table" "private_rt" {
 
 # Associate the private route table with the private subnet
 resource "aws_route_table_association" "private" {
-  subnet_id      = "${aws_subnet.Private_Subnet_az1.id}, ${aws_subnet.Private_Subnet_az2}
+  subnet_id      = "${aws_subnet.Private_Subnet_az1.id}, ${aws_subnet.Private_Subnet_az2}"
   route_table_id = aws_default_route_table.private_rt.id
 }
 

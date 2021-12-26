@@ -126,9 +126,9 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-# Associate the public route table with the public subnets
+# Associate the public route table with the public subnet
 resource "aws_route_table_association" "public" {
-  subnet_id      = ["aws_subnet.Public_Subnet_az1.id", "aws_subnet.Public_Subnet_az2"]
+  subnet_id      = "${aws_subnet.Public_Subnet_az1.id}, ${aws_subnet.Public_Subnet_az2.id}"
   route_table_id = aws_route_table.public_rt.id
 }
 

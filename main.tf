@@ -13,7 +13,7 @@ provider "aws" {
   region = "us-west-2"
 }
 
-# data retrieved from AWS for tagging
+# Data retrieved from AWS for tagging
 data "aws_region" "current" {}
 data "aws_availability_zones" "available" {}
 data "aws_vpc" "prod" {
@@ -86,7 +86,7 @@ resource "aws_subnet" "Private_Subnet_az2" {
     Region = "${data.aws_region.current.description}"
   }
 }
-# Create the internet gateway
+# Create the Internet Gateway
 resource "aws_internet_gateway" "access_web" {
   vpc_id = data.aws_vpc.prod.id
 
@@ -96,7 +96,7 @@ resource "aws_internet_gateway" "access_web" {
   }
 }
 
-# Create the default private route table
+# Create the default Private Route Table
 resource "aws_default_route_table" "private_rt" {
   default_route_table_id = aws_vpc.prod.default_route_table_id
 
@@ -105,7 +105,7 @@ resource "aws_default_route_table" "private_rt" {
   }
 }
 
-# Associate the private route table with the private subnets
+# Associate the Private Route Table with the Private Subnets
 resource "aws_route_table_association" "private_sub_1" {
   subnet_id      = aws_subnet.Private_Subnet_az1.id
   route_table_id = aws_default_route_table.private_rt.id
@@ -116,7 +116,7 @@ resource "aws_route_table_association" "private_sub_2" {
   route_table_id = aws_default_route_table.private_rt.id
 }
 
-# Create the public route table
+# Create the Public Route Table
 resource "aws_route_table" "public_rt" {
   vpc_id = data.aws_vpc.prod.id
 
@@ -131,7 +131,7 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-# Associate the public route table with the public subnets
+# Associate the Public Route Rable with the Public Subnets
 resource "aws_route_table_association" "public_sub_1" {
   subnet_id      = aws_subnet.Public_Subnet_az1.id
   route_table_id = aws_route_table.public_rt.id
@@ -142,7 +142,7 @@ resource "aws_route_table_association" "public_sub_2" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-#Create a security group for the public subnet
+#Create a Security Group for the Public Subnets
 resource "aws_security_group" "web_sg" {
   name        = "Web Security Group"
   description = "Security Group for the public subnet, allows web traffic ingress"
@@ -172,7 +172,7 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-#Create a security group for the private subnet
+#Create a Security Group for the Private Subnets
 resource "aws_security_group" "database_sg" {
   name        = "Database Security Group"
   description = "Security Group for the private subnet, allows internal traffic ingress"

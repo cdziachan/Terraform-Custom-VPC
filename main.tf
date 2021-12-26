@@ -30,7 +30,7 @@ resource "aws_vpc" "prod" {
     Name               = "Prod"
     Region             = "us-west-2"
     Availability_Zones = "2"
-    Subnets            = "2"
+    Subnets            = "4"
   }
 }
 
@@ -105,9 +105,14 @@ resource "aws_default_route_table" "private_rt" {
   }
 }
 
-# Associate the private route table with the private subnet
-resource "aws_route_table_association" "private" {
-  subnet_id      = "${aws_subnet.Private_Subnet_az1.id}, ${aws_subnet.Private_Subnet_az2.id}"
+# Associate the private route table with the private subnets
+resource "aws_route_table_association" "private_sub_1" {
+  subnet_id      = aws_subnet.Private_Subnet_az1.id
+  route_table_id = aws_default_route_table.private_rt.id
+}
+
+resource "aws_route_table_association" "private_sub_2" {
+  subnet_id      = aws_subnet.Private_Subnet_az2.id
   route_table_id = aws_default_route_table.private_rt.id
 }
 
@@ -126,9 +131,14 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-# Associate the public route table with the public subnet
-resource "aws_route_table_association" "public" {
-  subnet_id      = "${aws_subnet.Public_Subnet_az1.id}, ${aws_subnet.Public_Subnet_az2.id}"
+# Associate the public route table with the public subnets
+resource "aws_route_table_association" "public_sub_1" {
+  subnet_id      = aws_subnet.Public_Subnet_az1.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "public_sub_2" {
+  subnet_id      = aws_subnet.Public_Subnet_az2.id
   route_table_id = aws_route_table.public_rt.id
 }
 
@@ -202,7 +212,7 @@ resource "aws_security_group" "database_sg" {
 }
 #-------------------------------------
 output "availability_zones" {
-  value = data.aws_availability_zones.available.names
+  value = data.aws_availability_zones.available.id
 }
 
 # add an additional public and private subnet

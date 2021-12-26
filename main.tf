@@ -1,12 +1,12 @@
 /* This template deploys the following:
 - a custom VPC
-- a public and private subnet in two Availability Zones
+- 2 public and 2 private subnets in two Availability Zones
 - a private route table for traffic between the subnets
 - a public route table for the public subnet
 - an internet gateway and attaches it to the VPC
-- a security group allowing http and https access to the public subnet
-- a security group allowing ICMP/SSH/HTTP/HTTPS/MYSQL from resources
-  in the public subnet to resource in the private subnet
+- a security group allowing http and https access to the public subnets
+- a security group allowing ICMP/SSH/HTTP/HTTPS/MYSQL from resources in public subnets 
+  to resources in the private subnets
 */
 
 provider "aws" {
@@ -214,9 +214,3 @@ resource "aws_security_group" "database_sg" {
 output "availability_zones" {
   value = data.aws_availability_zones.available.id
 }
-
-# add an additional public and private subnet
-# adjust the CIDR Blocks for each subnet
-# move pub/priv subnet 1 to AZ1, move pub/priv subnet 2 to AZ2
-# update "Name" tags for each subnet
-# associate DB and Web Security groups with the new subnets

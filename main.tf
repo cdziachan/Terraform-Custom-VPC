@@ -177,3 +177,5 @@ resource "aws_security_group" "database_sg" {
 output "availability_zones" {
   value = data.aws_availability_zones.available.names
 }
+
+# additional_subnets branch

@@ -2,6 +2,7 @@ provider "aws" {
   region = "us-west-1"
 }
 
+#-------------------------------------------------------------------------------
 # Data retrieved from AWS for tagging
 data "aws_region" "current" {}
 data "aws_availability_zones" "available" {}
@@ -11,7 +12,7 @@ data "aws_vpc" "prod" {
     Name = "Prod VPC"
   }
 }
-
+#-------------------------------------------------------------------------------
 # Create the VPC
 resource "aws_vpc" "prod" {
   cidr_block = "10.0.0.0/16"
@@ -19,30 +20,15 @@ resource "aws_vpc" "prod" {
 }
 
 # Create the Public Subnets
-resource "aws_subnet" "Public_Subnet_az1" {
+resource "aws_subnet" "public_subnets" {
+  count                   = length(var.public_subnet_cidrs)
   vpc_id                  = data.aws_vpc.prod.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[0]
+  cidr_block              = var.public_subnet_cidrs[count.index]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = true
 
   tags = merge(var.tags, {
-    Name   = "Public Subnet 1"
-    AZ     = "${data.aws_availability_zones.available.names[0]}"
-    Region = "${data.aws_region.current.description}"
-    Env    = "${var.env}"
-    VPC    = "${data.aws_vpc.prod.id}"
-  })
-}
-
-resource "aws_subnet" "Public_Subnet_az2" {
-  vpc_id                  = data.aws_vpc.prod.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  map_public_ip_on_launch = true
-
-  tags = merge(var.tags, {
-    Name   = "Public Subnet 2"
-    AZ     = "${data.aws_availability_zones.available.names[1]}"
+    Name   = "Public Subnet ${count.index + 1}"
     Region = "${data.aws_region.current.description}"
     Env    = "${var.env}"
     VPC    = "${data.aws_vpc.prod.id}"
@@ -50,34 +36,20 @@ resource "aws_subnet" "Public_Subnet_az2" {
 }
 
 # Create the Private Subnets
-resource "aws_subnet" "Private_Subnet_az1" {
+resource "aws_subnet" "private_subnets" {
+  count             = length(var.private_subnet_cidrs)
   vpc_id            = data.aws_vpc.prod.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = var.private_subnet_cidrs[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(var.tags, {
-    Name   = "Private Subnet 1"
-    AZ     = "${data.aws_availability_zones.available.names[0]}"
+    Name   = "Private Subnet ${count.index + 1}"
     Region = "${data.aws_region.current.description}"
     Env    = "${var.env}"
     VPC    = "${data.aws_vpc.prod.id}"
   })
 }
 
-
-resource "aws_subnet" "Private_Subnet_az2" {
-  vpc_id            = data.aws_vpc.prod.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = merge(var.tags, {
-    Name   = "Private Subnet 2"
-    AZ     = "${data.aws_availability_zones.available.names[1]}"
-    Region = "${data.aws_region.current.description}"
-    Env    = "${var.env}"
-    VPC    = "${data.aws_vpc.prod.id}"
-  })
-}
 # Create the Internet Gateway
 resource "aws_internet_gateway" "access_web" {
   vpc_id = data.aws_vpc.prod.id
@@ -88,29 +60,6 @@ resource "aws_internet_gateway" "access_web" {
     Env    = "${var.env}"
     VPC    = "${data.aws_vpc.prod.id}"
   })
-}
-
-# Create the default Private Route Table
-resource "aws_default_route_table" "private_rt" {
-  default_route_table_id = aws_vpc.prod.default_route_table_id
-
-  tags = merge(var.tags, {
-    Name   = "Default-Private-RT"
-    Region = "${data.aws_region.current.description}"
-    Env    = "${var.env}"
-    VPC    = "${data.aws_vpc.prod.id}"
-  })
-}
-
-# Associate the Private Route Table with the Private Subnets
-resource "aws_route_table_association" "private_sub_1" {
-  subnet_id      = aws_subnet.Private_Subnet_az1.id
-  route_table_id = aws_default_route_table.private_rt.id
-}
-
-resource "aws_route_table_association" "private_sub_2" {
-  subnet_id      = aws_subnet.Private_Subnet_az2.id
-  route_table_id = aws_default_route_table.private_rt.id
 }
 
 # Create the Public Route Table
@@ -131,14 +80,29 @@ resource "aws_route_table" "public_rt" {
 }
 
 # Associate the Public Route Table with the Public Subnets
-resource "aws_route_table_association" "public_sub_1" {
-  subnet_id      = aws_subnet.Public_Subnet_az1.id
+resource "aws_route_table_association" "public_subnets" {
+  count          = length(aws_subnet.public_subnets[*].id)
+  subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.public_rt.id
 }
 
-resource "aws_route_table_association" "public_sub_2" {
-  subnet_id      = aws_subnet.Public_Subnet_az2.id
-  route_table_id = aws_route_table.public_rt.id
+# Create the default Private Route Table
+resource "aws_default_route_table" "private_rt" {
+  default_route_table_id = aws_vpc.prod.default_route_table_id
+
+  tags = merge(var.tags, {
+    Name   = "Default-Private-RT"
+    Region = "${data.aws_region.current.description}"
+    Env    = "${var.env}"
+    VPC    = "${data.aws_vpc.prod.id}"
+  })
+}
+
+# Associate the Private Route Table with the Private Subnets
+resource "aws_route_table_association" "private_subnets" {
+  count          = length(aws_subnet.public_subnets[*].id)
+  subnet_id      = aws_subnet.private_subnets[count.index].id
+  route_table_id = aws_default_route_table.private_rt.id
 }
 
 #Create a Security Group for the Public Subnets

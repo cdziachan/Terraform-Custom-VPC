@@ -176,7 +176,3 @@ resource "aws_security_group" "database_sg" {
     VPC    = "${data.aws_vpc.prod.id}"
   })
 }
-#-------------------------------------
-output "availability_zones" {
-  value = data.aws_availability_zones.available[*].id
-}

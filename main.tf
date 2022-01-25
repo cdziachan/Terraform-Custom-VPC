@@ -1,7 +1,6 @@
 provider "aws" {
   region = "us-west-1"
 }
-
 #-------------------------------------------------------------------------------
 # Data retrieved from AWS for tagging
 data "aws_region" "current" {}
@@ -13,6 +12,14 @@ data "aws_vpc" "prod" {
   }
 }
 #-------------------------------------------------------------------------------
+terraform {
+  backend "s3" {
+    bucket = "your-flavor-of-s3-bucket"
+    key    = "prod/network/terraform.tfstate"
+    region = "us-west-1"
+  }
+}
+
 # Create the VPC
 resource "aws_vpc" "prod" {
   cidr_block = "10.0.0.0/16"

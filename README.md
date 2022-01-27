@@ -7,3 +7,4 @@ This template deploys the following AWS Resources using Terraform:
 - a web security group allowing HTTP and HTTPS access to the public subnets
 - a database security group allowing ICMP/SSH/HTTP/HTTPS/MYSQL from resources in public subnets to resources in the private subnets
 - a tagging system for the resources
+- S3 remote state storage

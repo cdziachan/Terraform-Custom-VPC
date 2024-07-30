@@ -2,10 +2,6 @@ variable "aws_region" {
   default = "us-west-1"
 }
 
-variable "env" {
-  default = "Prod"
-}
-
 variable "public_subnet_cidrs" {
   default = [
     "10.0.1.0/24",
@@ -21,12 +17,13 @@ variable "private_subnet_cidrs" {
 }
 
 variable "tags" {
-  description = "mutual tags to be shared amongst resources in the repo"
+  description = "mutual tags for all resources"
   type        = map(any)
   default = {
-    Account_ID  = "123456789"
-    Owner       = "Cloud Engineering"
-    Cost_Center = "106435"
-    Tier        = "Networking"
+    Owner  = "Cloud Engineering"
+    Tier   = "Networking"
+    Region = "us-west-1"
+    Env    = "Prod"
+    VPC    = "Prod-VPC"
   }
 }
